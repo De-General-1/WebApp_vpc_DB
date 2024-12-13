@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  # Node.js service for the To-Do app
+  app:
+    build: .
+    container_name: todo-app
+    ports:
+      - "3000:3000" # Mapping
+    volumes:
+      - .:/app  # Mount current directory to /app in the container for live code changes
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - db  # This ensures the db service is available before starting the app
+  
+  # MongoDB service (for persistence)
+  db:
+    image: mongo:latest
+    container_name: todo-db
+    volumes:
+      - todo-data:/data/db  # Persist MongoDB data
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=example
+
+# Volumes to persist MongoDB data
+volumes:
+  todo-data:

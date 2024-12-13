@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do App</title>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>To-Do List</h1>
+        </header>
+
+        <main>
+            <form id="todo-form">
+                <input type="text" id="title" placeholder="Enter title" required>
+                <textarea id="description" placeholder="Enter description"></textarea>
+                <button type="submit">Add To-Do</button>
+            </form>
+
+            <ul id="todos-list"></ul>
+        </main>
+    </div>
+
+    <script>
+        // Function to create a To-Do item in the UI
+        const createTodoElement = (todo) => {
+            const todoItem = document.createElement('li');
+            todoItem.classList.add('todo-item');
+            
+            // Add title and description to the list item
+            const todoContent = document.createElement('div');
+            todoContent.classList.add('todo-content');
+            todoContent.innerHTML = `
+                <strong>${todo.title}</strong>
+                <p>${todo.description}</p>
+            `;
+            todoItem.appendChild(todoContent);
+
+            // Create delete button
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.classList.add('delete-btn');
+            deleteBtn.addEventListener('click', async () => {
+                const response = await fetch(`/api/todos/${todo._id}`, {
+                    method: 'DELETE',
+                });
+
+                if (response.ok) {
+                    todoItem.remove();  // Remove the item from the UI if deletion was successful
+                } else {
+                    alert('Failed to delete the todo item');
+                }
+            });
+
+            // Append delete button to the To-Do item
+            todoItem.appendChild(deleteBtn);
+            return todoItem;
+        };
+
+        // Handle form submission to add a new To-Do
+        const form = document.getElementById('todo-form');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('title').value;
+            const description = document.getElementById('description').value;
+
+            const response = await fetch('/api/todos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, description })
+            });
+
+            const newTodo = await response.json();
+            const todoItem = createTodoElement(newTodo);  // Create To-Do element
+            document.getElementById('todos-list').appendChild(todoItem);  // Append to the list
+
+            form.reset();  // Reset form after submission
+        });
+
+        // Fetch existing To-Do items on page load and display them
+        const loadTodos = async () => {
+            const response = await fetch('/api/todos');
+            const todos = await response.json();
+            todos.forEach(todo => {
+                const todoItem = createTodoElement(todo);  // Create and append each To-Do item
+                document.getElementById('todos-list').appendChild(todoItem);
+            });
+        };
+
+        // Load existing To-Dos on page load
+        document.addEventListener('DOMContentLoaded', loadTodos);
+    </script>
+</body>
+</html>
